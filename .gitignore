@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.venv/
+node_modules/
+dist/
+*.db
+backend/app/model_store/*.joblib
+backend/app/model_store/metrics.json
+backend/app/demo_target/demo_shop.db
+.DS_Store

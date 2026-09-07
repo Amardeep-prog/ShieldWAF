@@ -1,0 +1,96 @@
+# ShieldWAF signature rules
+# OWASP Core Rule Set (CRS) -inspired regex patterns, matched directly
+# against decoded request content -- independent of, and a fast
+# deterministic cross-check on, the ML classifier. Each pattern targets
+# a well-documented real-world payload family.
+#
+# field: one of "path", "query_string", "body", "user_agent", "any"
+#        ("any" = path + query_string + body concatenated)
+# pattern: a Python regex (case-insensitive matching is applied)
+
+- id: WAF-1001
+  name: "SQL injection - boolean/UNION-based"
+  severity: critical
+  category: SQLI
+  field: any
+  pattern: "(\\bunion\\b\\s+\\bselect\\b|\\bor\\b\\s+['\"]?1['\"]?\\s*=\\s*['\"]?1|\\band\\b\\s+['\"]?1['\"]?\\s*=\\s*['\"]?1)"
+  description: >
+    Classic boolean/UNION-based SQL injection pattern -- tautologies
+    like "OR 1=1" or a UNION SELECT appended to a query parameter.
+
+- id: WAF-1002
+  name: "SQL injection - time-based blind"
+  severity: critical
+  category: SQLI
+  field: any
+  pattern: "(sleep\\(\\s*\\d+\\s*\\)|benchmark\\(|waitfor\\s+delay|pg_sleep\\()"
+  description: >
+    Time-based blind SQL injection -- the attacker uses a database
+    sleep function to infer results from response timing rather than
+    output, so no error or data leak is needed to detect it.
+
+- id: WAF-1003
+  name: "Cross-site scripting (XSS) - script/event handler injection"
+  severity: high
+  category: XSS
+  field: any
+  pattern: "(<script|on(error|load|mouseover|focus)\\s*=|javascript:|<svg|<iframe)"
+  description: >
+    Injected <script> tags, inline event handlers, or a javascript:
+    URI -- the standard building blocks of a reflected/stored XSS
+    payload.
+
+- id: WAF-1004
+  name: "Path traversal / local file inclusion"
+  severity: high
+  category: PATH_TRAVERSAL
+  field: any
+  pattern: "(\\.\\./|\\.\\.\\\\|%2e%2e%2f|/etc/passwd|/etc/shadow|win\\.ini|boot\\.ini)"
+  description: >
+    Directory traversal sequences or direct references to well-known
+    sensitive files -- an attempt to read files outside the intended
+    web root.
+
+- id: WAF-1005
+  name: "OS command injection"
+  severity: critical
+  category: COMMAND_INJECTION
+  field: any
+  pattern: "(;\\s*(cat|ls|rm|whoami|wget|curl|nc|ping)\\b|\\$\\(.+\\)|`[^`]+`|\\|\\s*(sh|bash)\\b)"
+  description: >
+    Shell metacharacters (;, |, $(), backticks) combined with a
+    recognisable command name -- an attempt to chain an OS command
+    onto a vulnerable parameter.
+
+- id: WAF-1006
+  name: "Known scanner / attack-tool user agent"
+  severity: low
+  category: SCANNER_RECON
+  field: user_agent
+  pattern: "(sqlmap|nikto|nmap|nessus|acunetix|w3af|havij|dirbuster|wpscan|masscan|zgrab)"
+  description: >
+    The request's User-Agent header matches a well-known automated
+    scanning or exploitation tool -- almost never sent by a real
+    browser, and a strong precursor signal for reconnaissance.
+
+- id: WAF-1007
+  name: "Sensitive path probing"
+  severity: medium
+  category: SCANNER_RECON
+  field: path
+  pattern: "(wp-admin|wp-login|\\.env$|phpmyadmin|\\.git/config|\\.aws/credentials|actuator/env|server-status|xmlrpc\\.php)"
+  description: >
+    A request path targeting a well-known sensitive endpoint (admin
+    panels, credential files, framework internals) that a legitimate
+    client of this application would have no reason to request.
+
+- id: WAF-1008
+  name: "SQL/HTML comment injection (evasion)"
+  severity: medium
+  category: SQLI
+  field: any
+  pattern: "(--\\s|/\\*.*\\*/|<!--.*-->|#\\s*$)"
+  description: >
+    A SQL or HTML comment token used to truncate the rest of a query
+    or tag -- a common technique to neutralise the remainder of the
+    original statement after an injected payload.

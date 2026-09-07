@@ -1,0 +1,24 @@
+services:
+  demo-target:
+    build: ./backend
+    command: python -m app.demo_target.vulnerable_app
+    ports:
+      - "9000:9000"
+
+  waf-backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - SHIELDWAF_CORS_ORIGINS=http://localhost:5173
+      - SHIELDWAF_UPSTREAM=http://demo-target:9000
+      # - ANTHROPIC_API_KEY=sk-ant-...   # optional: enables the AI Security Analyst
+    depends_on:
+      - demo-target
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - waf-backend

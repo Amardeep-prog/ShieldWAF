@@ -1,0 +1,8 @@
+export const CLASSES = [
+  "BENIGN",
+  "SQLI",
+  "XSS",
+  "PATH_TRAVERSAL",
+  "COMMAND_INJECTION",
+  "SCANNER_RECON",
+];
