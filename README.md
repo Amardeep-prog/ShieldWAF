@@ -1,6 +1,6 @@
 # ShieldWAF — ML + Signature Hybrid Web Application Firewall
 
-An M.Tech-final-year-scoped **Web Application Firewall** — a genuinely
+ **Web Application Firewall** — a genuinely
 different project category from a network-flow NIDS: this inspects the
 *content* of HTTP requests (path, query string, body, headers) for
 application-layer attacks, and can run as a real inline reverse proxy in
